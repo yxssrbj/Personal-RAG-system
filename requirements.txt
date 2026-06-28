@@ -1,0 +1,9 @@
+langchain==0.3.7
+langchain-community
+langchain-core
+langchain-chroma
+langchain-openai
+chromadb
+sentence-transformers
+pymupdf
+tiktoken
