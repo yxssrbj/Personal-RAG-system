@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 import tempfile
-import uuid
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -30,6 +29,14 @@ os.environ["LANGCHAIN_ENDPOINT"] = "https://api.langchain.com"
 st.set_page_config(page_title="Personal Document Q&A", page_icon="📄", layout="centered")
 st.title("📄 Personal Document Q&A")
 st.caption("Upload PDF documents and chat with them in a simple Streamlit interface.")
+
+PERSIST_DIR = str(Path(__file__).resolve().parent.parent / "chroma_db")
+COLLECTION_NAME = "personal_documents"
+
+
+@st.cache_resource
+def get_embeddings():
+    return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 
 
@@ -62,43 +69,51 @@ if not ollama_ok:
     st.stop()
 
 
-if "session_id" not in st.session_state:
-    st.session_state.session_id = str(uuid.uuid4())
-
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
 if "retriever" not in st.session_state:
-    st.session_state.retriever = None
+    existing_store = Chroma(
+        embedding_function=get_embeddings(),
+        persist_directory=PERSIST_DIR,
+        collection_name=COLLECTION_NAME,
+    )
+    if existing_store._collection.count() > 0:
+        st.session_state.retriever = existing_store.as_retriever(search_kwargs={"k": 4})
+    else:
+        st.session_state.retriever = None
 
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def build_retriever(uploaded_files, collection_name):
+def build_retriever(uploaded_files):
 
     temp_files = []
     try:
         documents = []
         for uploaded_file in uploaded_files:
+            original_name = uploaded_file.name
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
                 temp_path = tmp_file.name
             temp_files.append(temp_path)
             loader = PyPDFLoader(temp_path)
-            documents.extend(loader.load())
+            loaded_docs = loader.load()
+            for doc in loaded_docs:
+                doc.metadata['source'] = original_name
+            documents.extend(loaded_docs)
+
 
         splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=500, chunk_overlap=80)
         splits = splitter.split_documents(documents)
 
-        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        persist_dir = str(Path(__file__).resolve().parent.parent / "chroma_db")
         vectorestore = Chroma.from_documents(
             splits,
-            embeddings,
-            persist_directory=persist_dir,
-            collection_name=collection_name)
+            get_embeddings(),
+            persist_directory=PERSIST_DIR,
+            collection_name=COLLECTION_NAME)
         return vectorestore.as_retriever(search_kwargs={"k": 4})
     finally:
         for temp_path in temp_files:
@@ -129,7 +144,7 @@ with st.sidebar:
     if st.button("Process PDFs") :
         if uploaded_files:
             with st.spinner("Loading and indexing your PDFs..."):
-                st.session_state.retriever = build_retriever(uploaded_files, st.session_state.session_id)
+                st.session_state.retriever = build_retriever(uploaded_files)
                 
                 st.success("Documents processed successfully.")
         else:
@@ -173,6 +188,7 @@ if prompt:
                 "chat_history":chat_history
             })
             answer = result['answer']
+            sources = result['context']
         except Exception as e:
             st.error(
             "Couldn't reach the Ollama model. Make sure Ollama is running "
@@ -183,3 +199,8 @@ if prompt:
         st.session_state.messages.append({"role": "assistant", "content": answer})
         with st.chat_message("assistant"):
             st.markdown(answer)
+            with st.expander("Sources"):
+                for doc in sources:
+                    page = doc.metadata.get("page","?")
+                    source = Path(doc.metadata.get("source","unknown")).name
+                    st.caption(f"{source} - page {page +1 if isinstance(page, int) else page}")

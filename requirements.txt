@@ -3,7 +3,10 @@ langchain-community
 langchain-core
 langchain-chroma
 langchain-openai
+langchain-ollama
+langchain-huggingface
 chromadb
 sentence-transformers
 pymupdf
+streamlit
 tiktoken

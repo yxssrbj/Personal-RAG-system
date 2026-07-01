@@ -6,3 +6,7 @@
 /share
 pyvenv.cfg
 cls
+/.agents
+/.codex
+/chroma_db
+/etc
