@@ -18,8 +18,19 @@ from langchain_classic.chains.combine_documents import (
 )
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+import sqlite3
 
+MESSAGES_DIR = Path(__file__).resolve().parent.parent / "db"
+MESSAGES_DIR.mkdir(parents=True, exist_ok=True)
 
+con = sqlite3.connect(MESSAGES_DIR / "messages.db")
+cur = con.cursor()
+cur.execute("CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, role, content)")
+
+def save_message(role, content):
+    st.session_state.messages.append({"role": role, "content": content})
+    cur.execute("INSERT INTO messages (role, content) VALUES (?, ?)", (role, content))
+    con.commit()
 load_dotenv()
 
 os.environ["USER_AGENT"] = "PersonalDocQA/1.0"
@@ -71,6 +82,11 @@ if not ollama_ok:
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+    res = cur.execute('SELECT role, content FROM messages ORDER BY id')
+    for msg in res.fetchall():
+        st.session_state.messages.append({"role":msg[0], "content":msg[1]})
+
+    
 
 if "retriever" not in st.session_state:
     existing_store = Chroma(
@@ -135,6 +151,8 @@ contextualize_prompt = ChatPromptTemplate.from_messages([
 llm = ChatOllama(model="llama3.2")
 
 with st.sidebar:
+    st.header("Model")
+    selected_model = st.selectbox("Choose a model", options=["Ollama 3.2"])
     st.header("Upload documents")
     uploaded_files = st.file_uploader(
         "Choose PDFs",
@@ -154,14 +172,16 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+
 prompt = st.chat_input("Ask a question about your uploaded documents")
+
 
 if prompt:
     if st.session_state.retriever is None:
         st.info("Upload and process a PDF before asking questions.")
         st.stop()
     
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    save_message("user",prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
     history_aware_retriever = create_history_aware_retriever(
@@ -183,24 +203,30 @@ if prompt:
     answer = None
     with st.spinner("Thinking..."):
         try:
-            result = rag_chain.invoke({
-                "input":prompt,
-                "chat_history":chat_history
-            })
-            answer = result['answer']
-            sources = result['context']
+            with st.chat_message("assistant"):
+                sources = []
+
+                def answer_tokens():
+                    for chunk in rag_chain.stream({"input": prompt, "chat_history": chat_history}):
+                        if "context" in chunk:
+                            sources.extend(chunk["context"])
+                        if "answer" in chunk:
+                            yield chunk["answer"]
+
+                answer = st.write_stream(answer_tokens())
+
+                if answer:
+                    with st.expander("Sources"):
+                        for doc in sources:
+                            page = doc.metadata.get("page", "?")
+                            source = Path(doc.metadata.get("source", "unknown")).name
+                            st.caption(f"{source} - page {page + 1 if isinstance(page, int) else page}")
         except Exception as e:
             st.error(
-            "Couldn't reach the Ollama model. Make sure Ollama is running "
-            "(`ollama serve`) and that the model is pulled (`ollama pull llama3.2`)."
-        )
+                "Couldn't reach the Ollama model. Make sure Ollama is running "
+                "(`ollama serve`) and that the model is pulled (`ollama pull llama3.2`)."
+            )
             st.caption(f"Details: {e}")
-    if answer is not None:
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-        with st.chat_message("assistant"):
-            st.markdown(answer)
-            with st.expander("Sources"):
-                for doc in sources:
-                    page = doc.metadata.get("page","?")
-                    source = Path(doc.metadata.get("source","unknown")).name
-                    st.caption(f"{source} - page {page +1 if isinstance(page, int) else page}")
+
+    if answer:
+        save_message("assistant",answer)
