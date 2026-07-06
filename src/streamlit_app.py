@@ -26,11 +26,30 @@ MESSAGES_DIR.mkdir(parents=True, exist_ok=True)
 con = sqlite3.connect(MESSAGES_DIR / "messages.db")
 cur = con.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, role, content)")
+cur.execute(
+    "CREATE TABLE IF NOT EXISTS conversations("
+    "id INTEGER PRIMARY KEY, title TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+)
+try:
+    cur.execute("ALTER TABLE messages ADD COLUMN conversation_id INTEGER")
+except sqlite3.OperationalError:
+    pass
+con.commit()
 
 def save_message(role, content):
+    conversation_id = st.session_state.conversation_id
     st.session_state.messages.append({"role": role, "content": content})
-    cur.execute("INSERT INTO messages (role, content) VALUES (?, ?)", (role, content))
+    cur.execute("INSERT INTO messages (role, content, conversation_id) VALUES (?, ?, ?)", (role, content, conversation_id))
     con.commit()
+
+
+def start_new_conversation(title="New chat"):
+    cur.execute('INSERT INTO conversations (title) VALUES (?)', (title,))
+    con.commit()
+    conversation_id = cur.lastrowid
+    st.session_state.conversation_id = conversation_id
+    st.session_state.messages = []
+
 load_dotenv()
 
 os.environ["USER_AGENT"] = "PersonalDocQA/1.0"
@@ -79,14 +98,19 @@ if not ollama_ok:
     st.error(ollama_message)
     st.stop()
 
+if "conversation_id" not in st.session_state:
+    start_new_conversation()
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-    res = cur.execute('SELECT role, content FROM messages ORDER BY id')
-    for msg in res.fetchall():
-        st.session_state.messages.append({"role":msg[0], "content":msg[1]})
+# if "messages" not in st.session_state:
+#     st.session_state.messages = []
+#     res = cur.execute('SELECT role, content FROM messages ORDER BY id')
+#     for msg in res.fetchall():
+#         st.session_state.messages.append({"role":msg[0], "content":msg[1]})
 
     
+## the logic
+# -> start with empty messages list on startup and new conversation row in conversations table
+# -> give me a temporary palce holder for new chats
 
 if "retriever" not in st.session_state:
     existing_store = Chroma(
@@ -99,6 +123,8 @@ if "retriever" not in st.session_state:
     else:
         st.session_state.retriever = None
 
+if "conversation_id" not in st.session_state:
+    pass
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
