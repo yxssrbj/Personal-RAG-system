@@ -50,7 +50,13 @@ def start_new_conversation(title="New chat"):
     st.session_state.conversation_id = conversation_id
     st.session_state.messages = []
 
+
+def load_conversations():
+    res = cur.execute("SELECT id, title FROM conversations ORDER BY created_at DESC")
+    st.session_state.conversations_list = dict(res.fetchall())
+
 load_dotenv()
+load_conversations()
 
 os.environ["USER_AGENT"] = "PersonalDocQA/1.0"
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
@@ -98,20 +104,22 @@ if not ollama_ok:
     st.error(ollama_message)
     st.stop()
 
+def load_conversation(conversation_id):
+    st.session_state.conversation_id = conversation_id
+    st.session_state.messages = []
+    res = cur.execute(
+        "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY id",
+        (conversation_id,),
+    )
+    for role, content in res.fetchall():
+        st.session_state.messages.append({"role": role, "content": content})
+
 if "conversation_id" not in st.session_state:
-    start_new_conversation()
+        start_new_conversation()
+        load_conversations()
 
-# if "messages" not in st.session_state:
-#     st.session_state.messages = []
-#     res = cur.execute('SELECT role, content FROM messages ORDER BY id')
-#     for msg in res.fetchall():
-#         st.session_state.messages.append({"role":msg[0], "content":msg[1]})
-
-    
-## the logic
-# -> start with empty messages list on startup and new conversation row in conversations table
-# -> give me a temporary palce holder for new chats
-
+elif "messages" not in st.session_state:
+    load_conversation(st.session_state.conversation_id)
 if "retriever" not in st.session_state:
     existing_store = Chroma(
         embedding_function=get_embeddings(),
@@ -123,8 +131,7 @@ if "retriever" not in st.session_state:
     else:
         st.session_state.retriever = None
 
-if "conversation_id" not in st.session_state:
-    pass
+
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
@@ -176,7 +183,12 @@ contextualize_prompt = ChatPromptTemplate.from_messages([
 ])
 llm = ChatOllama(model="llama3.2")
 
+
+
 with st.sidebar:
+    if st.button("New Chat"):
+        start_new_conversation()
+        load_conversations()
     st.header("Model")
     selected_model = st.selectbox("Choose a model", options=["Ollama 3.2"])
     st.header("Upload documents")
@@ -185,6 +197,14 @@ with st.sidebar:
         type=["pdf"],
         accept_multiple_files=True,
     )
+    current_conversation = st.sidebar.radio("Previous Conversations",
+                                            ## cleanup here, turn list into a re usable list for both options and index
+                                            options= list(st.session_state.conversations_list.keys()),
+                                            format_func = lambda cid: st.session_state.conversations_list[cid],
+                                            index=list(st.session_state.conversations_list).index(st.session_state.conversation_id)
+                                            )
+    if current_conversation != st.session_state.conversation_id:
+        load_conversation(current_conversation)
     if st.button("Process PDFs") :
         if uploaded_files:
             with st.spinner("Loading and indexing your PDFs..."):
@@ -193,6 +213,7 @@ with st.sidebar:
                 st.success("Documents processed successfully.")
         else:
             st.warning("Please upload at least one PDF first.")
+    
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
