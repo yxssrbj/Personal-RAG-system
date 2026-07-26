@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import tempfile
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -19,11 +20,13 @@ from langchain_classic.chains.combine_documents import (
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import sqlite3
+from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
+from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
 
 MESSAGES_DIR = Path(__file__).resolve().parent.parent / "db"
 MESSAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-con = sqlite3.connect(MESSAGES_DIR / "messages.db")
+con = sqlite3.connect(MESSAGES_DIR / "messages.db", check_same_thread=False)
 cur = con.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, role, content)")
 cur.execute(
@@ -54,6 +57,7 @@ def start_new_conversation(title="New chat"):
 def load_conversations():
     res = cur.execute("SELECT id, title FROM conversations ORDER BY created_at DESC")
     st.session_state.conversations_list = dict(res.fetchall())
+    
 
 load_dotenv()
 load_conversations()
@@ -74,6 +78,10 @@ COLLECTION_NAME = "personal_documents"
 def get_embeddings():
     return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
+@st.cache_resource
+def build_reranker():
+    cross_encoder = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L6-v2")
+    return CrossEncoderReranker(model=cross_encoder, top_n=3)
 
 
 def build_chat_history(messages):
@@ -114,6 +122,7 @@ def load_conversation(conversation_id):
     for role, content in res.fetchall():
         st.session_state.messages.append({"role": role, "content": content})
 
+
 if "conversation_id" not in st.session_state:
         start_new_conversation()
         load_conversations()
@@ -127,7 +136,12 @@ if "retriever" not in st.session_state:
         collection_name=COLLECTION_NAME,
     )
     if existing_store._collection.count() > 0:
-        st.session_state.retriever = existing_store.as_retriever(search_kwargs={"k": 4})
+        st.session_state.retriever = existing_store.as_retriever(search_kwargs={"k": 20})    
+        reranker = build_reranker()
+        st.session_state.compression_retriever = ContextualCompressionRetriever(
+                    base_compressor=reranker,
+                    base_retriever=st.session_state.retriever
+                )    
     else:
         st.session_state.retriever = None
 
@@ -163,7 +177,7 @@ def build_retriever(uploaded_files):
             get_embeddings(),
             persist_directory=PERSIST_DIR,
             collection_name=COLLECTION_NAME)
-        return vectorestore.as_retriever(search_kwargs={"k": 4})
+        return vectorestore.as_retriever(search_kwargs={"k": 20})
     finally:
         for temp_path in temp_files:
             try:
@@ -183,9 +197,20 @@ contextualize_prompt = ChatPromptTemplate.from_messages([
 ])
 llm = ChatOllama(model="llama3.2")
 
+def generate_title(first_message):
+    response = llm.invoke(f"Generate a 3–5 word title for a conversation that starts with the following message : {first_message}. Reply with only the title, no quotes, no punctuation at the end.")
+    title = response.content.strip()
+    print(title)
+    return title
+
+def rename_conversation(conversation_id, title):
+    cur.execute("UPDATE conversations SET title = ? WHERE id = ?", (title, conversation_id))    
+    con.commit()
+    load_conversations()
 
 
 with st.sidebar:
+    
     if st.button("New Chat"):
         start_new_conversation()
         load_conversations()
@@ -197,18 +222,27 @@ with st.sidebar:
         type=["pdf"],
         accept_multiple_files=True,
     )
-    current_conversation = st.sidebar.radio("Previous Conversations",
-                                            ## cleanup here, turn list into a re usable list for both options and index
-                                            options= list(st.session_state.conversations_list.keys()),
-                                            format_func = lambda cid: st.session_state.conversations_list[cid],
-                                            index=list(st.session_state.conversations_list).index(st.session_state.conversation_id)
-                                            )
-    if current_conversation != st.session_state.conversation_id:
-        load_conversation(current_conversation)
+    st.header("Previous Conversations")
+    for cid, title in st.session_state.conversations_list.items():
+        is_active = cid == st.session_state.conversation_id
+        if st.button(
+            title,
+            key=f"conv_{cid}",
+            use_container_width=True,
+            type="primary" if is_active else "secondary",
+        ):
+            load_conversation(cid)
+
     if st.button("Process PDFs") :
         if uploaded_files:
             with st.spinner("Loading and indexing your PDFs..."):
                 st.session_state.retriever = build_retriever(uploaded_files)
+                reranker = build_reranker()
+                st.session_state.compression_retriever = ContextualCompressionRetriever(
+                    base_compressor=reranker,
+                    base_retriever=st.session_state.retriever
+                )
+
                 
                 st.success("Documents processed successfully.")
         else:
@@ -223,16 +257,19 @@ for message in st.session_state.messages:
 prompt = st.chat_input("Ask a question about your uploaded documents")
 
 
+print("--- SEND: prompt received ---")
 if prompt:
     if st.session_state.retriever is None:
         st.info("Upload and process a PDF before asking questions.")
         st.stop()
-    
+    is_first_message = False
+    if len(st.session_state.messages) == 0:
+        is_first_message = True
     save_message("user",prompt)
     with st.chat_message("user"):
         st.markdown(prompt)
     history_aware_retriever = create_history_aware_retriever(
-        llm, st.session_state.retriever, contextualize_prompt
+        llm, st.session_state.compression_retriever, contextualize_prompt
     )
     qa_prompt = ChatPromptTemplate.from_messages(
         [
@@ -277,3 +314,7 @@ if prompt:
 
     if answer:
         save_message("assistant",answer)
+        if is_first_message:
+                            title = generate_title(prompt)
+                            rename_conversation(st.session_state.conversation_id, title)
+                            st.rerun()
