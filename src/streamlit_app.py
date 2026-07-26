@@ -22,40 +22,47 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import sqlite3
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
 from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
+from rag_logic import build_chat_history, format_docs
+
+
 
 MESSAGES_DIR = Path(__file__).resolve().parent.parent / "db"
 MESSAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-con = sqlite3.connect(MESSAGES_DIR / "messages.db", check_same_thread=False)
-cur = con.cursor()
-cur.execute("CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, role, content)")
-cur.execute(
-    "CREATE TABLE IF NOT EXISTS conversations("
-    "id INTEGER PRIMARY KEY, title TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
-)
-try:
-    cur.execute("ALTER TABLE messages ADD COLUMN conversation_id INTEGER")
-except sqlite3.OperationalError:
-    pass
-con.commit()
+@st.cache_resource
+def get_connection():
+    con = sqlite3.connect(MESSAGES_DIR / "messages.db", check_same_thread=False)
+    con.execute("CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, role, content)")
+    con.execute(
+        "CREATE TABLE IF NOT EXISTS conversations("
+    "   id INTEGER PRIMARY KEY, title TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+    )
+    try:
+        con.execute("ALTER TABLE messages ADD COLUMN conversation_id INTEGER")
+    except sqlite3.OperationalError:
+        pass
+    con.commit()
+    return con
+
+con = get_connection()
 
 def save_message(role, content):
     conversation_id = st.session_state.conversation_id
     st.session_state.messages.append({"role": role, "content": content})
-    cur.execute("INSERT INTO messages (role, content, conversation_id) VALUES (?, ?, ?)", (role, content, conversation_id))
+    con.execute("INSERT INTO messages (role, content, conversation_id) VALUES (?, ?, ?)", (role, content, conversation_id))
     con.commit()
 
 
 def start_new_conversation(title="New chat"):
-    cur.execute('INSERT INTO conversations (title) VALUES (?)', (title,))
+    cursor = con.execute('INSERT INTO conversations (title) VALUES (?)', (title,))
     con.commit()
-    conversation_id = cur.lastrowid
+    conversation_id = cursor.lastrowid
     st.session_state.conversation_id = conversation_id
     st.session_state.messages = []
 
 
 def load_conversations():
-    res = cur.execute("SELECT id, title FROM conversations ORDER BY created_at DESC")
+    res = con.execute("SELECT id, title FROM conversations ORDER BY created_at DESC")
     st.session_state.conversations_list = dict(res.fetchall())
     
 
@@ -74,6 +81,7 @@ PERSIST_DIR = str(Path(__file__).resolve().parent.parent / "chroma_db")
 COLLECTION_NAME = "personal_documents"
 
 
+
 @st.cache_resource
 def get_embeddings():
     return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -84,14 +92,6 @@ def build_reranker():
     return CrossEncoderReranker(model=cross_encoder, top_n=3)
 
 
-def build_chat_history(messages):
-    history = []
-    for msg in messages:
-        if msg["role"] == "user":
-            history.append(HumanMessage(content=msg["content"]))
-        elif msg["role"] == "assistant":
-            history.append(AIMessage(content=msg["content"]))
-    return history
 
 
 def check_ollama_heath(model_name="llama3.2", base_url="http://localhost:11434"):
@@ -115,7 +115,7 @@ if not ollama_ok:
 def load_conversation(conversation_id):
     st.session_state.conversation_id = conversation_id
     st.session_state.messages = []
-    res = cur.execute(
+    res = con.execute(
         "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY id",
         (conversation_id,),
     )
@@ -147,8 +147,6 @@ if "retriever" not in st.session_state:
 
 
 
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
 
 
 def build_retriever(uploaded_files):
@@ -200,11 +198,10 @@ llm = ChatOllama(model="llama3.2")
 def generate_title(first_message):
     response = llm.invoke(f"Generate a 3–5 word title for a conversation that starts with the following message : {first_message}. Reply with only the title, no quotes, no punctuation at the end.")
     title = response.content.strip()
-    print(title)
     return title
 
 def rename_conversation(conversation_id, title):
-    cur.execute("UPDATE conversations SET title = ? WHERE id = ?", (title, conversation_id))    
+    con.execute("UPDATE conversations SET title = ? WHERE id = ?", (title, conversation_id))    
     con.commit()
     load_conversations()
 
@@ -257,7 +254,6 @@ for message in st.session_state.messages:
 prompt = st.chat_input("Ask a question about your uploaded documents")
 
 
-print("--- SEND: prompt received ---")
 if prompt:
     if st.session_state.retriever is None:
         st.info("Upload and process a PDF before asking questions.")
@@ -315,6 +311,11 @@ if prompt:
     if answer:
         save_message("assistant",answer)
         if is_first_message:
-                            title = generate_title(prompt)
-                            rename_conversation(st.session_state.conversation_id, title)
-                            st.rerun()
+            try :
+                title = generate_title(prompt)
+                rename_conversation(st.session_state.conversation_id, title)
+            except Exception as e:
+                pass
+            else:
+                st.rerun()
+                        
