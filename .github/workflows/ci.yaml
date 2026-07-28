@@ -13,6 +13,6 @@ jobs:
         with:
           python-version: "3.14"
       - name: Install test dependencies
-        run: pip install langchain-core requests
+        run: pip install pytest langchain-core requests
       - name: Run tests
         run: pytest
