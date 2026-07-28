@@ -1,0 +1,591 @@
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://127.0.0.1:8501
+
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:17 in <module> |
+|                                                                                      |
+|    14 load_dotenv()                                                                  |
+|    15                                                                                |
+|    16 os.environ["USER_AGENT"] = "PersonalDocQA/1.0"                                 |
+| >  17 os.environ["LANGCHAIN_TRACING_V2"] = "false"                                   |
+|    18 os.environ["LANGCHAIN_ENDPOINT"] = "https://api.langchain.com"                 |
+|    19                                                                                |
+|    20 st.set_page_config(page_title="Personal Document Q&A", page_icon="+------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:17 in <module> |
+|                                                                                      |
+|    14 from langchain_huggingface import HuggingFaceEmbeddings                        |
+|    15 import requests                                                                |
+|    16 from langchain.chains import create_history_aware_retriever, create_retrieval_ |
+| >  17 from langchain.chains.combine_documents import create_stuff_documents_chain    |
+|    18 from langchain_core.messages import HumanMessage, AIMessage                    |
+|    19 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder     |
+|    20                                                                                |
++--------------------------------------------------------------------------------------+
+ModuleNotFoundError: No module named 'langchain.chains.combine_documents'
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:16 in <module> |
+|                                                                                      |
+|    13 from langchain_chroma import Chroma                                            |
+|    14 from langchain_huggingface import HuggingFaceEmbeddings                        |
+|    15 import requests                                                                |
+| >  16 from langchain.chains import create_history_aware_retriever, create_retrieval_ |
+|    17 from langchain.chains.combine_documents import create_stuff_documents_chain    |
+|    18 from langchain_core.messages import HumanMessage, AIMessage                    |
+|    19 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder     |
++--------------------------------------------------------------------------------------+
+ModuleNotFoundError: No module named 'langchain_core.chains'
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:58 in <module> |
+|                                                                                      |
+|    55                                                                                |
+|    56 ollama_ok, ollama_message = check_ollama_heath()                               |
+|    57                                                                                |
+| >  58 if not ollama_ok:                                                              |
+|    59     st.error(ollama_message)                                                   |
+|    60     st.stop()                                                                  |
+|    61                                                                                |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:49 in          |
+| check_ollama_heath                                                                   |
+|                                                                                      |
+|    46         response = requests.get(base_url + "/api/tags", timeout=3)             |
+|    47         response.raise_for_status                                              |
+|    48     except requests.exceptions.RequestException:                               |
+| >  49         return False, "Ollama doesn't seem to be running"                      |
+|    50                                                                                |
+|    51     models = [m['name'] for m in response.json().get("models",[])]             |
+|    52     if not any(m == model_name or m.startswith(f"{model_name}") for m in model |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\magic_funcs.py:29 in            |
+| transparent_write                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\elements\write.py:464 in write                       |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:324 in is_dataframe_like           |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:1379 in determine_data_format      |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\__init__.py:56 in <module>                              |
+|                                                                                      |
+|    53 )                                                                              |
+|    54                                                                                |
+|    55 # let init-time option registration happen                                     |
+| >  56 import pandas.core.config_init  # pyright: ignore[reportUnusedImport] # noqa:  |
+|    57                                                                                |
+|    58 from pandas.core.api import (                                                  |
+|    59     # dtype                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\core\config_init.py:31 in <module>                      |
+|                                                                                      |
+|    28     is_text,                                                                   |
+|    29 )                                                                              |
+|    30                                                                                |
+| >  31 from pandas.errors import Pandas4Warning                                       |
+|    32                                                                                |
+|    33 # compute                                                                      |
+|    34                                                                                |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\errors\__init__.py:12 in <module>                       |
+|                                                                                      |
+|      9                                                                               |
+|     10 from pandas._config.config import OptionError                                 |
+|     11                                                                               |
+| >   12 from pandas._libs.tslibs import (                                             |
+|     13     IncompatibleFrequency,                                                    |
+|     14     OutOfBoundsDatetime,                                                      |
+|     15     OutOfBoundsTimedelta,                                                     |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\_libs\__init__.py:18 in <module>                        |
+|                                                                                      |
+|   15 # see pandas_datetime_exec in pd_datetime.c                                     |
+|   16 import pandas._libs.pandas_parser  # isort: skip # type: ignore[reportUnusedImp |
+|   17 import pandas._libs.pandas_datetime  # noqa: F401 # isort: skip # type: ignore[ |
+| > 18 from pandas._libs.interval import Interval                                      |
+|   19 from pandas._libs.tslibs import (                                               |
+|   20     NaT,                                                                        |
+|   21     NaTType,                                                                    |
+|                                                                                      |
+| in init pandas._libs.interval:1                                                      |
+|                                                                                      |
+| in init pandas._libs.hashtable:1                                                     |
+|                                                                                      |
+| in init pandas._libs.missing:40                                                      |
++--------------------------------------------------------------------------------------+
+AttributeError: partially initialized module 'pandas' from 
+'C:\Users\yasse\Desktop\dev\Personal Document Q&A\Lib\site-packages\pandas\__init__.py' 
+has no attribute '_pandas_datetime_CAPI' (most likely due to a circular import)
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:58 in <module> |
+|                                                                                      |
+|    55         return False, f"Model '{model_name}' isn't pulled yet."                |
+|    56     return True, "Ollama is ready"                                             |
+|    57                                                                                |
+| >  58 ollama_ok, ollama_message = check_ollama_heath()                               |
+|    59                                                                                |
+|    60 if not ollama_ok:                                                              |
+|    61     st.error(ollama_message)                                                   |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:49 in          |
+| check_ollama_heath                                                                   |
+|                                                                                      |
+|    46 def check_ollama_heath(model_name="llama3.2", base_url="http://localhost:11434 |
+|    47     try:                                                                       |
+|    48         response = requests.get(base_url + "/api/tags", timeout=3)             |
+| >  49         response.raise_for_status                                              |
+|    50     except requests.exceptions.RequestException:                               |
+|    51         return False, "Ollama doesn't seem to be running"                      |
+|    52                                                                                |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\magic_funcs.py:29 in            |
+| transparent_write                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\elements\write.py:464 in write                       |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:324 in is_dataframe_like           |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:1379 in determine_data_format      |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\__init__.py:56 in <module>                              |
+|                                                                                      |
+|    53 )                                                                              |
+|    54                                                                                |
+|    55 # let init-time option registration happen                                     |
+| >  56 import pandas.core.config_init  # pyright: ignore[reportUnusedImport] # noqa:  |
+|    57                                                                                |
+|    58 from pandas.core.api import (                                                  |
+|    59     # dtype                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\core\config_init.py:31 in <module>                      |
+|                                                                                      |
+|    28     is_text,                                                                   |
+|    29 )                                                                              |
+|    30                                                                                |
+| >  31 from pandas.errors import Pandas4Warning                                       |
+|    32                                                                                |
+|    33 # compute                                                                      |
+|    34                                                                                |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\errors\__init__.py:12 in <module>                       |
+|                                                                                      |
+|      9                                                                               |
+|     10 from pandas._config.config import OptionError                                 |
+|     11                                                                               |
+| >   12 from pandas._libs.tslibs import (                                             |
+|     13     IncompatibleFrequency,                                                    |
+|     14     OutOfBoundsDatetime,                                                      |
+|     15     OutOfBoundsTimedelta,                                                     |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\_libs\__init__.py:18 in <module>                        |
+|                                                                                      |
+|   15 # see pandas_datetime_exec in pd_datetime.c                                     |
+|   16 import pandas._libs.pandas_parser  # isort: skip # type: ignore[reportUnusedImp |
+|   17 import pandas._libs.pandas_datetime  # noqa: F401 # isort: skip # type: ignore[ |
+| > 18 from pandas._libs.interval import Interval                                      |
+|   19 from pandas._libs.tslibs import (                                               |
+|   20     NaT,                                                                        |
+|   21     NaTType,                                                                    |
+|                                                                                      |
+| in init pandas._libs.interval:1                                                      |
+|                                                                                      |
+| in init pandas._libs.hashtable:1                                                     |
+|                                                                                      |
+| in init pandas._libs.missing:40                                                      |
++--------------------------------------------------------------------------------------+
+AttributeError: partially initialized module 'pandas' from 
+'C:\Users\yasse\Desktop\dev\Personal Document Q&A\Lib\site-packages\pandas\__init__.py' 
+has no attribute '_pandas_datetime_CAPI' (most likely due to a circular import)
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:164 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   161     ]                                                                          |
+|   162     )                                                                          |
+|   163                                                                                |
+| > 164     qa_prompt                                                                  |
+|   165                                                                                |
+|   166     qa_chain = create_stuff_documents_chain(llm, qa_prompt)                    |
+|   167     rag_chain = create_retrieval_chain(history_aware_retriever, qa_chain)      |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\magic_funcs.py:29 in            |
+| transparent_write                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\elements\write.py:464 in write                       |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:324 in is_dataframe_like           |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:1379 in determine_data_format      |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\__init__.py:56 in <module>                              |
+|                                                                                      |
+|    53 )                                                                              |
+|    54                                                                                |
+|    55 # let init-time option registration happen                                     |
+| >  56 import pandas.core.config_init  # pyright: ignore[reportUnusedImport] # noqa:  |
+|    57                                                                                |
+|    58 from pandas.core.api import (                                                  |
+|    59     # dtype                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\core\config_init.py:31 in <module>                      |
+|                                                                                      |
+|    28     is_text,                                                                   |
+|    29 )                                                                              |
+|    30                                                                                |
+| >  31 from pandas.errors import Pandas4Warning                                       |
+|    32                                                                                |
+|    33 # compute                                                                      |
+|    34                                                                                |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\errors\__init__.py:12 in <module>                       |
+|                                                                                      |
+|      9                                                                               |
+|     10 from pandas._config.config import OptionError                                 |
+|     11                                                                               |
+| >   12 from pandas._libs.tslibs import (                                             |
+|     13     IncompatibleFrequency,                                                    |
+|     14     OutOfBoundsDatetime,                                                      |
+|     15     OutOfBoundsTimedelta,                                                     |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\_libs\__init__.py:18 in <module>                        |
+|                                                                                      |
+|   15 # see pandas_datetime_exec in pd_datetime.c                                     |
+|   16 import pandas._libs.pandas_parser  # isort: skip # type: ignore[reportUnusedImp |
+|   17 import pandas._libs.pandas_datetime  # noqa: F401 # isort: skip # type: ignore[ |
+| > 18 from pandas._libs.interval import Interval                                      |
+|   19 from pandas._libs.tslibs import (                                               |
+|   20     NaT,                                                                        |
+|   21     NaTType,                                                                    |
+|                                                                                      |
+| in init pandas._libs.interval:1                                                      |
+|                                                                                      |
+| in init pandas._libs.hashtable:1                                                     |
+|                                                                                      |
+| in init pandas._libs.missing:40                                                      |
++--------------------------------------------------------------------------------------+
+AttributeError: partially initialized module 'pandas' from 
+'C:\Users\yasse\Desktop\dev\Personal Document Q&A\Lib\site-packages\pandas\__init__.py' 
+has no attribute '_pandas_datetime_CAPI' (most likely due to a circular import)
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:164 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   161     ]                                                                          |
+|   162     )                                                                          |
+|   163                                                                                |
+| > 164     qa_prompt                                                                  |
+|   165                                                                                |
+|   166     qa_chain = create_stuff_documents_chain(llm, qa_prompt)                    |
+|   167     rag_chain = create_retrieval_chain(history_aware_retriever, qa_chain)      |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\magic_funcs.py:29 in            |
+| transparent_write                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\metrics_util.py:698 in wrapped_func          |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\elements\write.py:464 in write                       |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:324 in is_dataframe_like           |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\dataframe_util.py:1379 in determine_data_format      |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\__init__.py:56 in <module>                              |
+|                                                                                      |
+|    53 )                                                                              |
+|    54                                                                                |
+|    55 # let init-time option registration happen                                     |
+| >  56 import pandas.core.config_init  # pyright: ignore[reportUnusedImport] # noqa:  |
+|    57                                                                                |
+|    58 from pandas.core.api import (                                                  |
+|    59     # dtype                                                                    |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\core\config_init.py:31 in <module>                      |
+|                                                                                      |
+|    28     is_text,                                                                   |
+|    29 )                                                                              |
+|    30                                                                                |
+| >  31 from pandas.errors import Pandas4Warning                                       |
+|    32                                                                                |
+|    33 # compute                                                                      |
+|    34                                                                                |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\errors\__init__.py:12 in <module>                       |
+|                                                                                      |
+|      9                                                                               |
+|     10 from pandas._config.config import OptionError                                 |
+|     11                                                                               |
+| >   12 from pandas._libs.tslibs import (                                             |
+|     13     IncompatibleFrequency,                                                    |
+|     14     OutOfBoundsDatetime,                                                      |
+|     15     OutOfBoundsTimedelta,                                                     |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\pandas\_libs\__init__.py:18 in <module>                        |
+|                                                                                      |
+|   15 # see pandas_datetime_exec in pd_datetime.c                                     |
+|   16 import pandas._libs.pandas_parser  # isort: skip # type: ignore[reportUnusedImp |
+|   17 import pandas._libs.pandas_datetime  # noqa: F401 # isort: skip # type: ignore[ |
+| > 18 from pandas._libs.interval import Interval                                      |
+|   19 from pandas._libs.tslibs import (                                               |
+|   20     NaT,                                                                        |
+|   21     NaTType,                                                                    |
+|                                                                                      |
+| in init pandas._libs.interval:1                                                      |
+|                                                                                      |
+| in init pandas._libs.hashtable:1                                                     |
+|                                                                                      |
+| in init pandas._libs.missing:40                                                      |
++--------------------------------------------------------------------------------------+
+AttributeError: partially initialized module 'pandas' from 
+'C:\Users\yasse\Desktop\dev\Personal Document Q&A\Lib\site-packages\pandas\__init__.py' 
+has no attribute '_pandas_datetime_CAPI' (most likely due to a circular import)
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:166 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   163                                                                                |
+|   164     qa_prompt                                                                  |
+|   165                                                                                |
+| > 166     qa_chain = create_stuff_documents_chain(llm, qa_prompt)                    |
+|   167     rag_chain = create_retrieval_chain(history_aware_retriever, qa_chain)      |
+|   168     chat_history = build_chat_history(st.session_state.messages[:-1])          |
+|   169     with st.spinner("Thinking..."):                                            |
++--------------------------------------------------------------------------------------+
+NameError: name 'history_aware_retriever' is not defined
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:121 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   118     ("human", "{input}"),                                                      |
+|   119 ])                                                                             |
+|   120 llm = ChatOllama(model="llama3.2")                                             |
+| > 121                                                                                |
+|   122 with st.sidebar:                                                               |
+|   123     st.header("Upload documents")                                              |
+|   124     uploaded_files = st.file_uploader(                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\langchain_classic\chains\history_aware_retriever.py:63 in      |
+| create_history_aware_retriever                                                       |
+|                                                                                      |
+|   60             # Both empty string and empty list evaluate to False                |
+|   61             lambda x: not x.get("chat_history", False),                         |
+|   62             # If no chat history, then we just pass input to retriever          |
+| > 63             (lambda x: x["input"]) | retriever,                                 |
+|   64         ),                                                                      |
+|   65         # If chat history, then we pass inputs to LLM chain, then to retriever  |
+|   66         prompt | llm | StrOutputParser() | retriever,                           |
++--------------------------------------------------------------------------------------+
+TypeError: unsupported operand type(s) for |: 'function' and 'NoneType'
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:121 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   118     ("human", "{input}"),                                                      |
+|   119 ])                                                                             |
+|   120 llm = ChatOllama(model="llama3.2")                                             |
+| > 121 history_aware_retriever = create_history_aware_retriever(                      |
+|   122                     llm, st.session_state.retriever, contextualize_prompt      |
+|   123                 )                                                              |
+|   124 with st.sidebar:                                                               |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\langchain_classic\chains\history_aware_retriever.py:63 in      |
+| create_history_aware_retriever                                                       |
+|                                                                                      |
+|   60             # Both empty string and empty list evaluate to False                |
+|   61             lambda x: not x.get("chat_history", False),                         |
+|   62             # If no chat history, then we just pass input to retriever          |
+| > 63             (lambda x: x["input"]) | retriever,                                 |
+|   64         ),                                                                      |
+|   65         # If chat history, then we pass inputs to LLM chain, then to retriever  |
+|   66         prompt | llm | StrOutputParser() | retriever,                           |
++--------------------------------------------------------------------------------------+
+TypeError: unsupported operand type(s) for |: 'function' and 'NoneType'
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:121 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   118     ("human", "{input}"),                                                      |
+|   119 ])                                                                             |
+|   120 llm = ChatOllama(model="llama3.2")                                             |
+| > 121 history_aware_retriever = create_history_aware_retriever(                      |
+|   122         llm, st.session_state.retriever, contextualize_prompt                  |
+|   123     )                                                                          |
+|   124 with st.sidebar:                                                               |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\langchain_classic\chains\history_aware_retriever.py:63 in      |
+| create_history_aware_retriever                                                       |
+|                                                                                      |
+|   60             # Both empty string and empty list evaluate to False                |
+|   61             lambda x: not x.get("chat_history", False),                         |
+|   62             # If no chat history, then we just pass input to retriever          |
+| > 63             (lambda x: x["input"]) | retriever,                                 |
+|   64         ),                                                                      |
+|   65         # If chat history, then we pass inputs to LLM chain, then to retriever  |
+|   66         prompt | llm | StrOutputParser() | retriever,                           |
++--------------------------------------------------------------------------------------+
+TypeError: unsupported operand type(s) for |: 'function' and 'NoneType'
++------------------------- Traceback (most recent call last) --------------------------+
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py:129 in             |
+| exec_func_with_error_handling                                                        |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document                                         |
+| Q&A\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py:789 in         |
+| code_to_exec                                                                         |
+|                                                                                      |
+| C:\Users\yasse\Desktop\dev\Personal Document Q&A\src\streamlit_app.py:180 in         |
+| <module>                                                                             |
+|                                                                                      |
+|   177             "Couldn't reach the Ollama model. Make sure Ollama is running "    |
+|   178             "(`ollama serve`) and that the model is pulled (`ollama pull llama |
+|   179         )                                                                      |
+| > 180         st.caption(f"Details: {e}")                                            |
+|   181     if answer is not None:                                                     |
+|   182         st.session_state.messages.append({"role": "assistant", "content": answ |
+|   183         with st.chat_message("assistant"):                                     |
++--------------------------------------------------------------------------------------+
+NameError: name 'e' is not defined
