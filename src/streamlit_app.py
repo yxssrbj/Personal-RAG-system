@@ -12,18 +12,16 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-import requests
+
 from langchain_classic.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain_classic.chains.combine_documents import (
     create_stuff_documents_chain,
 )
-from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import sqlite3
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
 from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
-from rag_logic import build_chat_history, format_docs
-
+from rag_logic import build_chat_history, check_ollama_heath
 
 
 MESSAGES_DIR = Path(__file__).resolve().parent.parent / "db"
@@ -91,22 +89,8 @@ def build_reranker():
     cross_encoder = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L6-v2")
     return CrossEncoderReranker(model=cross_encoder, top_n=3)
 
-
-
-
-def check_ollama_heath(model_name="llama3.2", base_url="http://localhost:11434"):
-    try:
-        response = requests.get(base_url + "/api/tags", timeout=3)
-        response.raise_for_status()
-    except requests.exceptions.RequestException:
-        return False, "Ollama doesn't seem to be running"
-    
-    models = [m['name'] for m in response.json().get("models",[])]
-    if not any(m == model_name or m.startswith(f"{model_name}") for m in models):
-        return False, f"Model '{model_name}' isn't pulled yet."
-    return True, "Ollama is ready"
-
-ollama_ok, ollama_message = check_ollama_heath()
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+ollama_ok, ollama_message = check_ollama_heath(base_url=OLLAMA_BASE_URL)
 
 if not ollama_ok:
     st.error(ollama_message)
@@ -193,10 +177,9 @@ contextualize_prompt = ChatPromptTemplate.from_messages([
     MessagesPlaceholder("chat_history"),
     ("human", "{input}"),
 ])
-llm = ChatOllama(model="llama3.2")
 
 def generate_title(first_message):
-    response = llm.invoke(f"Generate a 3–5 word title for a conversation that starts with the following message : {first_message}. Reply with only the title, no quotes, no punctuation at the end.")
+    response = llm.invoke(f"Generate a 3–6 word title for a conversation that starts with the following message : {first_message}. Reply with only the title, no quotes, no punctuation at the end.")
     title = response.content.strip()
     return title
 
@@ -212,7 +195,8 @@ with st.sidebar:
         start_new_conversation()
         load_conversations()
     st.header("Model")
-    selected_model = st.selectbox("Choose a model", options=["Ollama 3.2"])
+    selected_model = st.selectbox("Choose a model", options=["llama3.2"])
+    llm = ChatOllama(model=selected_model, base_url=OLLAMA_BASE_URL)
     st.header("Upload documents")
     uploaded_files = st.file_uploader(
         "Choose PDFs",
@@ -246,9 +230,16 @@ with st.sidebar:
             st.warning("Please upload at least one PDF first.")
     
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+if not st.session_state.messages:
+    st.markdown("👋 Upload a PDF to get started")
+else:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message.get("sources"):
+                with st.expander("Sources"):
+                    for s in message["sources"]:
+                        st.caption(f"{s['source']} - page {s['page']}")
 
 
 prompt = st.chat_input("Ask a question about your uploaded documents")
@@ -285,7 +276,7 @@ if prompt:
         try:
             with st.chat_message("assistant"):
                 sources = []
-
+                sources_list = []
                 def answer_tokens():
                     for chunk in rag_chain.stream({"input": prompt, "chat_history": chat_history}):
                         if "context" in chunk:
@@ -294,12 +285,12 @@ if prompt:
                             yield chunk["answer"]
 
                 answer = st.write_stream(answer_tokens())
-
                 if answer:
                     with st.expander("Sources"):
                         for doc in sources:
                             page = doc.metadata.get("page", "?")
                             source = Path(doc.metadata.get("source", "unknown")).name
+                            sources_list.append({"source":source, "page":page + 1})
                             st.caption(f"{source} - page {page + 1 if isinstance(page, int) else page}")
         except Exception as e:
             st.error(
@@ -310,6 +301,7 @@ if prompt:
 
     if answer:
         save_message("assistant",answer)
+        st.session_state.messages[-1]["sources"] = sources_list
         if is_first_message:
             try :
                 title = generate_title(prompt)
