@@ -1,0 +1,9 @@
+Lib/
+Scripts/
+Include/
+chroma_db/
+db/
+.git/
+__pycache__/
+*.pyc
+tests/
